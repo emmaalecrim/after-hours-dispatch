@@ -262,6 +262,22 @@ button {
   padding: 0;
 }
 
+.retry-link {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-gold-bright);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.retry-link:hover,
+.retry-link:focus-visible {
+  color: var(--accent-gold);
+}
+
 .spinner {
   width: 18px;
   height: 18px;
