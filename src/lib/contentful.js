@@ -11,7 +11,11 @@ export async function fetchLocales() {
   try {
     const res = await fetch('/api/locales.json');
     if (res.status === 404) return [];
-    if (!res.ok) throw new Error('Failed to load locales');
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      if (body?.error === 'not-configured') return [];
+      throw new Error('Failed to load locales');
+    }
     return await res.json();
   } catch (err) {
     console.error('fetchLocales error', err);
@@ -25,11 +29,17 @@ export async function fetchPosts({ skip = 0, limit = 12, locale } = {}) {
     if (locale) qs.set('locale', locale);
     const res = await fetch(`/api/posts.json?${qs.toString()}`);
     if (res.status === 404) {
-      // server not configured — return demo slice
       const slice = SAMPLE_POSTS.slice(skip, skip + limit);
       return { posts: slice, total: SAMPLE_POSTS.length };
     }
-    if (!res.ok) throw new Error('Failed to fetch posts');
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      if (body?.error === 'not-configured') {
+        const slice = SAMPLE_POSTS.slice(skip, skip + limit);
+        return { posts: slice, total: SAMPLE_POSTS.length };
+      }
+      throw new Error('Failed to fetch posts');
+    }
     return await res.json();
   } catch (err) {
     console.error('fetchPosts error', err);
