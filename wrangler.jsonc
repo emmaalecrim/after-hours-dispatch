@@ -20,8 +20,8 @@
 		}
 	},
 	"vars": {
-		"CONTENTFUL_CONTENT_TYPE": "blogPost",
-		"CONTENTFUL_SPACE_ID": "klx6xz311xov",
+		"CONTENTFUL_CONTENT_TYPE": "YOUR_POST_TYPE",
+		"CONTENTFUL_SPACE_ID": "YOUR_SPACE_ID",
 		"CONTENTFUL_ENVIRONMENT": "master",
 	},
 }
