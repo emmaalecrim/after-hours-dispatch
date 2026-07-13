@@ -1,4 +1,4 @@
-// Demo content shown only when PUBLIC_CONTENTFUL_* env vars are missing,
+// Demo content shown only when Contentful env vars are missing,
 // so the layout can be reviewed before a Contentful space is wired up.
 // Shaped identically to a normalized entry from src/lib/contentful.js.
 

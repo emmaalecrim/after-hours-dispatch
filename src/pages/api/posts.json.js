@@ -1,16 +1,30 @@
+import { getRuntimeEnv } from '../../lib/runtimeEnv.js';
+
 export const prerender = false;
 
-const SPACE_ID = import.meta.env.CONTENTFUL_SPACE_ID;
-const ACCESS_TOKEN = import.meta.env.CONTENTFUL_ACCESS_TOKEN;
-const ENVIRONMENT = import.meta.env.CONTENTFUL_ENVIRONMENT || 'master';
-const CONTENT_TYPE = import.meta.env.CONTENTFUL_CONTENT_TYPE || 'post';
-
 export async function get({ url }) {
-  if (!SPACE_ID || !ACCESS_TOKEN) {
-    return new Response(JSON.stringify({ error: 'not-configured' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' }
-    });
+  const {
+    CONTENTFUL_SPACE_ID: SPACE_ID,
+    CONTENTFUL_ACCESS_TOKEN: ACCESS_TOKEN,
+    CONTENTFUL_ENVIRONMENT: ENVIRONMENT,
+    CONTENTFUL_CONTENT_TYPE: CONTENT_TYPE
+  } = await getRuntimeEnv();
+
+  const missing = [];
+  if (!SPACE_ID) missing.push('CONTENTFUL_SPACE_ID');
+  if (!ACCESS_TOKEN) missing.push('CONTENTFUL_ACCESS_TOKEN');
+  if (missing.length > 0) {
+    return new Response(
+      JSON.stringify({
+        error: 'not-configured',
+        missing,
+        hint: 'Set CONTENTFUL_ACCESS_TOKEN as a secret; set other CONTENTFUL_* vars in wrangler.toml under [vars] or the Cloudflare dashboard.'
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   // create client lazily to avoid importing node-only code at module eval time
