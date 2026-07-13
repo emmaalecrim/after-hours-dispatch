@@ -11,7 +11,13 @@
 		"binding": "ASSETS"
 	},
 	"observability": {
-		"enabled": true
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": false
+		}
 	},
 	"vars": {
 		"CONTENTFUL_CONTENT_TYPE": "blogPost",

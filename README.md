@@ -26,7 +26,7 @@ of sample posts, so the layout can be reviewed without Contentful.
 ## Contentful content model
 
 Create a content type (default ID `post`, override via
-`PUBLIC_CONTENTFUL_CONTENT_TYPE`) with these fields:
+`CONTENTFUL_CONTENT_TYPE`) with these fields:
 
 | Field         | Type        | Required | Notes                                   |
 |---------------|-------------|----------|------------------------------------------|
