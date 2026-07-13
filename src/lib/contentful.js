@@ -1,86 +1,40 @@
-import { createClient } from 'contentful';
-import { documentToPlainTextString } from '@contentful/rich-text-plain-text-renderer';
-
-const SPACE_ID = import.meta.env.PUBLIC_CONTENTFUL_SPACE_ID;
-const ACCESS_TOKEN = import.meta.env.PUBLIC_CONTENTFUL_ACCESS_TOKEN;
-const ENVIRONMENT = import.meta.env.PUBLIC_CONTENTFUL_ENVIRONMENT || 'master';
-export const CONTENT_TYPE = import.meta.env.PUBLIC_CONTENTFUL_CONTENT_TYPE || 'post';
-
-export const isConfigured = Boolean(SPACE_ID && ACCESS_TOKEN);
-
-let client = null;
-if (isConfigured) {
-  client = createClient({
-    space: SPACE_ID,
-    accessToken: ACCESS_TOKEN,
-    environment: ENVIRONMENT
-  });
-}
-
-const EXCERPT_LENGTH = 220;
-
-function toExcerpt(fields) {
-  if (fields.excerpt) return fields.excerpt;
-  if (fields.content) {
-    try {
-      const plain = documentToPlainTextString(fields.content).trim();
-      return plain.length > EXCERPT_LENGTH
-        ? `${plain.slice(0, EXCERPT_LENGTH).trim()}…`
-        : plain;
-    } catch {
-      return '';
-    }
-  }
-  return '';
-}
-
-function normalize(entry) {
-  const fields = entry.fields || {};
-  return {
-    id: entry.sys.id,
-    title: fields.title || 'Untitled',
-    subtitle: fields.subtitle || '',
-    excerpt: toExcerpt(fields),
-    content: fields.content || null,
-    date: fields.publishDate || entry.sys.createdAt
-  };
-}
+import { SAMPLE_POSTS } from './samplePosts.js';
 
 /**
- * Lists the locales enabled on this space (Settings → Locales in Contentful),
- * so the app can offer an edition switcher instead of hardcoding one locale.
+ * Client-side wrapper that calls the server-side API routes under `/api/*`.
+ * If the server reports Contentful is not configured (404), the client falls
+ * back to the bundled `SAMPLE_POSTS` so the UI still works in demo mode.
  */
+const EXCERPT_LENGTH = 220; // kept for parity with server
+
 export async function fetchLocales() {
-  if (!client) return [];
-
-  const response = await client.getLocales();
-  return response.items.map((item) => ({
-    code: item.code,
-    name: item.name,
-    default: item.default
-  }));
-}
-
-/**
- * Fetches one page of posts, newest first.
- * Throws if Contentful isn't configured or the request fails —
- * callers decide how to fall back.
- */
-export async function fetchPosts({ skip = 0, limit = 12, locale } = {}) {
-  if (!client) {
-    throw new Error('Contentful is not configured');
+  try {
+    const res = await fetch('/api/locales.json');
+    if (res.status === 404) return [];
+    if (!res.ok) throw new Error('Failed to load locales');
+    return await res.json();
+  } catch (err) {
+    console.error('fetchLocales error', err);
+    return [];
   }
-
-  const response = await client.getEntries({
-    content_type: CONTENT_TYPE,
-    order: '-fields.publishDate',
-    skip,
-    limit,
-    ...(locale ? { locale } : {})
-  });
-
-  return {
-    posts: response.items.map(normalize),
-    total: response.total
-  };
 }
+
+export async function fetchPosts({ skip = 0, limit = 12, locale } = {}) {
+  try {
+    const qs = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+    if (locale) qs.set('locale', locale);
+    const res = await fetch(`/api/posts.json?${qs.toString()}`);
+    if (res.status === 404) {
+      // server not configured — return demo slice
+      const slice = SAMPLE_POSTS.slice(skip, skip + limit);
+      return { posts: slice, total: SAMPLE_POSTS.length };
+    }
+    if (!res.ok) throw new Error('Failed to fetch posts');
+    return await res.json();
+  } catch (err) {
+    console.error('fetchPosts error', err);
+    throw err;
+  }
+}
+
+export const isConfigured = true; // client-side always uses API; server decides

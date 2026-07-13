@@ -3,7 +3,7 @@ import Masthead from './Masthead.jsx';
 import PostGrid from './PostGrid.jsx';
 import PostDialog from './PostDialog.jsx';
 import ContentWarningDialog, { CONSENT_KEY } from './ContentWarningDialog.jsx';
-import { fetchPosts, fetchLocales, isConfigured } from '../lib/contentful.js';
+import { fetchPosts, fetchLocales } from '../lib/contentful.js';
 import { SAMPLE_POSTS } from '../lib/samplePosts.js';
 
 const PAGE_SIZE = 12;
@@ -42,15 +42,11 @@ export default function App() {
     let cancelled = false;
 
     async function loadLocales() {
-      if (!isConfigured) {
-        if (!cancelled) setLocale(FALLBACK_LOCALE);
-        return;
-      }
       try {
         const items = await fetchLocales();
         if (cancelled) return;
-        setLocales(items);
-        const defaultLocale = items.find((item) => item.default) || items[0];
+        setLocales(items || []);
+        const defaultLocale = (items && items.find((item) => item.default)) || (items && items[0]);
         setLocale(defaultLocale ? defaultLocale.code : FALLBACK_LOCALE);
       } catch (err) {
         console.error('Failed to load locales', err);
@@ -68,18 +64,6 @@ export default function App() {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
-      if (!isConfigured) {
-        // Demo mode: paginate through the local sample set.
-        const skip = skipRef.current;
-        const slice = SAMPLE_POSTS.slice(skip, skip + PAGE_SIZE);
-        if (requestId !== requestIdRef.current) return;
-        setPosts((prev) => [...prev, ...slice]);
-        skipRef.current += slice.length;
-        setHasMore(skipRef.current < SAMPLE_POSTS.length);
-        setError(false);
-        return;
-      }
-
       const { posts: page, total } = await fetchPosts({
         skip: skipRef.current,
         limit: PAGE_SIZE,

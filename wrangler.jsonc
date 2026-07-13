@@ -1,7 +1,9 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2026-07-13",
-	"compatibility_flags": ["global_fetch_strictly_public"],
+	"compatibility_flags": [
+		"global_fetch_strictly_public"
+	],
 	"name": "afterhours-dispatch-template",
 	"main": "@astrojs/cloudflare/entrypoints/server",
 	"assets": {
@@ -10,5 +12,11 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"vars": {
+		"CONTENTFUL_CONTENT_TYPE": "blogPost",
+		"CONTENTFUL_SPACE_ID": "klx6xz311xov",
+		"CONTENTFUL_ENVIRONMENT": "master",
+		"SITE_URL": "http: //www.24-7.cat/"
+	},
 }

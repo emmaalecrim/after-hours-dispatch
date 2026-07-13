@@ -54,3 +54,41 @@ translated. With only one locale configured, the switcher stays hidden.
 On first load, a fullscreen notice asks the reader to confirm they're 18+.
 Accepting stores a flag in `localStorage` (`afterhours-dispatch:age-consent`)
 so it won't show again on that device. Declining redirects to google.com.
+
+## Deploying to Cloudflare Workers
+
+This project is ready to deploy to Cloudflare Workers using the `@astrojs/cloudflare`
+adapter. The only secret required at deploy-time is your Contentful Delivery
+API access token — all other Contentful configuration may be non-secret and can
+be stored in `wrangler.toml` or as plain env vars on your deployment target.
+
+Quick deploy checklist:
+
+1. Build the site locally:
+
+```bash
+npm ci
+npm run build
+```
+
+2. Configure your `wrangler.toml` (or use the provided `wrangler.example.toml`),
+	 setting `CONTENTFUL_SPACE_ID`, `CONTENTFUL_CONTENT_TYPE`, and
+	 `CONTENTFUL_ENVIRONMENT` under `[vars]`.
+
+3. Set the secret for the Contentful access token:
+
+```bash
+wrangler secret put CONTENTFUL_ACCESS_TOKEN
+```
+
+4. Publish with Wrangler:
+
+```bash
+wrangler publish
+```
+
+Notes:
+- The server-side API routes live under `/api/*` and will fetch content from
+	Contentful using the `CONTENTFUL_*` env vars.
+- If those endpoints are not configured on the server (missing `CONTENTFUL_SPACE_ID`
+	or token), the client falls back to the local demo posts in `src/lib/samplePosts.js`.
