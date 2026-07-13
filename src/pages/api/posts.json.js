@@ -2,7 +2,8 @@ import { getRuntimeEnv } from '../../lib/runtimeEnv.js';
 
 export const prerender = false;
 
-export async function get({ url }) {
+/** @type {import('astro').APIRoute} */
+export const GET = async ({ url }) => {
   const {
     CONTENTFUL_SPACE_ID: SPACE_ID,
     CONTENTFUL_ACCESS_TOKEN: ACCESS_TOKEN,
