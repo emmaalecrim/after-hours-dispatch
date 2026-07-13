@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "generate-types": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.1.2",
     "@astrojs/react": "^6.0.1",
     "@contentful/rich-text-plain-text-renderer": "^17.0.0",
     "@contentful/rich-text-react-renderer": "^16.0.1",
@@ -16,6 +18,7 @@
     "astro": "^7.0.7",
     "contentful": "^10.15.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "wrangler": "^4.110.0"
   }
 }
