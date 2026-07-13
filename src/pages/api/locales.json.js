@@ -24,14 +24,19 @@ export const GET = async () => {
   }
 
   try {
-    const { createClient } = await import('contentful');
-    const client = createClient({
-      space: SPACE_ID,
-      accessToken: ACCESS_TOKEN,
-      environment: ENVIRONMENT
+    const endpoint = `https://cdn.contentful.com/spaces/${SPACE_ID}/environments/${ENVIRONMENT}/locales`;
+    const response = await fetch(endpoint, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`
+      }
     });
-    const response = await client.getLocales();
-    const items = response.items.map((item) => ({
+
+    if (!response.ok) {
+      throw new Error(`Contentful locales fetch failed ${response.status}`);
+    }
+
+    const data = await response.json();
+    const items = data.items.map((item) => ({
       code: item.code,
       name: item.name,
       default: item.default

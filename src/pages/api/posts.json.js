@@ -28,35 +28,34 @@ export const GET = async ({ url }) => {
     );
   }
 
-  // create client lazily to avoid importing node-only code at module eval time
-  let client = null;
-  try {
-    const { createClient } = await import('contentful');
-    client = createClient({
-      space: SPACE_ID,
-      accessToken: ACCESS_TOKEN,
-      environment: ENVIRONMENT
-    });
-  } catch (err) {
-    console.error('Failed to load Contentful client', err);
-    return new Response(JSON.stringify({ error: 'failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
   const skip = Number(url.searchParams.get('skip') || 0);
   const limit = Number(url.searchParams.get('limit') || 12);
   const locale = url.searchParams.get('locale') || undefined;
 
   try {
-    const response = await client.getEntries({
+    const endpoint = `https://cdn.contentful.com/spaces/${SPACE_ID}/environments/${ENVIRONMENT}/entries`;
+    const params = new URLSearchParams({
       content_type: CONTENT_TYPE,
       order: '-fields.publishDate',
-      skip,
-      limit,
+      skip: String(skip),
+      limit: String(limit),
       ...(locale ? { locale } : {})
     });
+    const response = await fetch(`${endpoint}?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Contentful fetch failed ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data?.items || !Array.isArray(data.items)) {
+      throw new Error('Contentful response missing items');
+    }
 
     const EXCERPT_LENGTH = 220;
     const { documentToPlainTextString } = await import('@contentful/rich-text-plain-text-renderer');
@@ -88,9 +87,10 @@ export const GET = async ({ url }) => {
       };
     }
 
-    const posts = response.items.map(normalize);
+    const posts = data.items.map(normalize);
+    const total = typeof data.total === 'number' ? data.total : data.items.length;
 
-    return new Response(JSON.stringify({ posts, total: response.total }), {
+    return new Response(JSON.stringify({ posts, total }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
