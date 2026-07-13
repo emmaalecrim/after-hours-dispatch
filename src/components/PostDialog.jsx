@@ -20,23 +20,60 @@ const richTextOptions = {
   }
 };
 
-function formatKicker(dateString) {
+function formatKicker(dateString, locale) {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return '';
   return date
-    .toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toLocaleDateString(locale || 'en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    })
     .toUpperCase();
 }
 
-export default function PostDialog({ post, onClose }) {
+export default function PostDialog({ post, onClose, locale }) {
+  const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
 
-    function handleKey(event) {
-      if (event.key === 'Escape') onClose();
+    function getFocusableElements() {
+      return dialogRef.current
+        ? Array.from(
+            dialogRef.current.querySelectorAll(
+              'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter((el) => !el.hasAttribute('disabled'))
+        : [];
     }
+
+    function handleKey(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusableElements();
+      if (focusable.length === 0) return;
+
+      const firstElement = focusable[0];
+      const lastElement = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+      } else if (document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
     document.addEventListener('keydown', handleKey);
 
     const previousOverflow = document.body.style.overflow;
@@ -65,8 +102,8 @@ export default function PostDialog({ post, onClose }) {
       </button>
 
       <div className="post-dialog__scroll">
-        <article className="post-dialog__inner">
-          <p className="post-dialog__kicker">{formatKicker(post.date)}</p>
+        <article className="post-dialog__inner" ref={dialogRef}>
+          <p className="post-dialog__kicker">{formatKicker(post.date, locale)}</p>
           <h1 className="post-dialog__title" id="post-dialog-title">
             {post.title}
           </h1>
