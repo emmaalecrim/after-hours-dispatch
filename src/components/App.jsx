@@ -23,6 +23,7 @@ export default function App() {
   const [locale, setLocale] = useState(null);
 
   const [activePost, setActivePost] = useState(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     let hasConsent = false;
@@ -64,12 +65,14 @@ export default function App() {
   }, []);
 
   const loadMore = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     try {
       if (!isConfigured) {
         // Demo mode: paginate through the local sample set.
         const skip = skipRef.current;
         const slice = SAMPLE_POSTS.slice(skip, skip + PAGE_SIZE);
+        if (requestId !== requestIdRef.current) return;
         setPosts((prev) => [...prev, ...slice]);
         skipRef.current += slice.length;
         setHasMore(skipRef.current < SAMPLE_POSTS.length);
@@ -82,22 +85,25 @@ export default function App() {
         limit: PAGE_SIZE,
         locale
       });
+      if (requestId !== requestIdRef.current) return;
       setPosts((prev) => [...prev, ...page]);
       skipRef.current += page.length;
       setHasMore(skipRef.current < total && page.length > 0);
       setError(false);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error('Failed to load posts', err);
       setError(true);
       setHasMore(false);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [locale]);
 
   // (Re)load the first page whenever the active locale is set or changes.
   useEffect(() => {
     if (!locale) return;
+    requestIdRef.current += 1;
     skipRef.current = 0;
     setPosts([]);
     setHasMore(true);
@@ -105,6 +111,11 @@ export default function App() {
     loadMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
+
+  const retryLoadMore = useCallback(() => {
+    setError(false);
+    loadMore();
+  }, [loadMore]);
 
   if (!warningChecked) return null;
 
@@ -123,13 +134,19 @@ export default function App() {
         posts={posts}
         onOpenPost={setActivePost}
         onLoadMore={loadMore}
+        onRetry={retryLoadMore}
         loading={loading}
         hasMore={hasMore}
         error={error}
+        locale={locale}
       />
 
       {activePost && (
-        <PostDialog post={activePost} onClose={() => setActivePost(null)} />
+        <PostDialog
+          post={activePost}
+          locale={locale}
+          onClose={() => setActivePost(null)}
+        />
       )}
 
       {showWarning && (

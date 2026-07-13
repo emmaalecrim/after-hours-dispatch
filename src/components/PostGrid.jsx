@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import PostCard from './PostCard.jsx';
 
-export default function PostGrid({ posts, onOpenPost, onLoadMore, loading, hasMore, error }) {
+export default function PostGrid({ posts, onOpenPost, onLoadMore, onRetry, loading, hasMore, error, locale }) {
   const scrollRef = useRef(null);
   const sentinelRef = useRef(null);
 
@@ -28,7 +28,7 @@ export default function PostGrid({ posts, onOpenPost, onLoadMore, loading, hasMo
       <div className="post-scroll__inner">
         <div className="post-grid">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onOpen={onOpenPost} />
+            <PostCard key={post.id} post={post} onOpen={onOpenPost} locale={locale} />
           ))}
 
           {posts.length === 0 && !loading && (
@@ -42,6 +42,11 @@ export default function PostGrid({ posts, onOpenPost, onLoadMore, loading, hasMo
           {loading && <span className="spinner" aria-label="Loading more posts" />}
           {!hasMore && posts.length > 0 && (
             <span className="status-row status-row--inline">End of dispatch</span>
+          )}
+          {error && !loading && (
+            <div className="status-row status-row--inline">
+              Could not load posts. <button className="retry-link" onClick={onRetry} type="button">Try again</button>
+            </div>
           )}
         </div>
       </div>
