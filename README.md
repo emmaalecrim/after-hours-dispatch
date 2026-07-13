@@ -81,10 +81,10 @@ npm run build
 wrangler secret put CONTENTFUL_ACCESS_TOKEN
 ```
 
-4. Publish with Wrangler:
+4. Deploy with Wrangler:
 
 ```bash
-wrangler publish
+wrangler deploy
 ```
 
 Notes:
