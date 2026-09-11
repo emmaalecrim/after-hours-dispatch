@@ -19,6 +19,6 @@
     "contentful": "^10.15.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "wrangler": "^4.110.0"
+    "wrangler": "^4.131.0"
   }
 }
